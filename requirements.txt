@@ -6,3 +6,4 @@ duckduckgo-search
 langchain_community
 PyYAML
 dashscope
+pypdf

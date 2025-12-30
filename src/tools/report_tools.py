@@ -75,7 +75,13 @@ class FileDownloadTool(BaseTool):
                  return f"Error: Invalid URL provided: {url}"
 
             # Create reports directory if it doesn't exist
-            reports_dir = os.path.join(os.getcwd(), 'reports')
+            # Check for env var override
+            custom_output_dir = os.environ.get("REPORT_OUTPUT_DIR")
+            if custom_output_dir:
+                reports_dir = custom_output_dir
+            else:
+                reports_dir = os.path.join(os.getcwd(), 'reports')
+                
             os.makedirs(reports_dir, exist_ok=True)
 
             filename = clean_url.split("/")[-1]
