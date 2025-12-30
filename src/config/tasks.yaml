@@ -1,0 +1,10 @@
+download_report_task:
+  description: >
+    1. 使用搜索工具在巨潮资讯（site:cninfo.com.cn）查找“{company_input}”的最新中文年度报告PDF。
+       - 搜索词建议包含：“{company_input} 年报 PDF”。
+       - 优先寻找完整版年报（通常文件名包含“年报”且文件较大）。
+    2. 找到可靠的PDF链接后，使用下载工具将其下载到当前目录。
+    3. 验证文件已成功保存在本地。
+    4. 如果下载失败，请尝试其他的链接。
+  expected_output: >
+    下载完成的年报PDF文件的本地绝对路径。

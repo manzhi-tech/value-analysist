@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+
+# Mac
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Environment Variables
+.env
+
+# Project specific
+*.pdf
+debug_*.py
+src/custom_llm.py
