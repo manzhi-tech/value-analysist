@@ -1,9 +1,0 @@
-crewai
-langchain_openai
-python-dotenv
-requests
-duckduckgo-search
-langchain_community
-PyYAML
-dashscope
-pypdf
