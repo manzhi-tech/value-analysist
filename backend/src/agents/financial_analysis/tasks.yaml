@@ -1,0 +1,41 @@
+locate_financial_tables:
+  description: >
+    搜索年报，找到以下三个表格的确切页码：
+    1. 合并利润表（或经营报表）(Consolidated Statement of Income)
+    2. 合并资产负债表 (Consolidated Balance Sheet)
+    3. 合并现金流量表 (Consolidated Statement of Cash Flows)
+    
+    你应该寻找主要的财务报表区域，通常位于 MD&A 部分之后。
+    请以简单的 JSON 列表格式返回页码。
+  expected_output: >
+    一个 JSON 对象: {"income_statement_page": <int>, "balance_sheet_page": <int>, "cash_flow_page": <int>}
+  agent: financial_analyst
+
+extract_financial_data:
+  description: >
+    使用在上一个任务中找到的页码，提取计算所有者收益所需的关键数据。
+    务必使用 `FinancialTableTool` 工具进行精准提取。
+    
+    需要提取的数据：
+    - 净利润 (Net Income) [来源: 利润表]
+    - 折旧和摊销 (Depreciation and Amortization) [来源: 现金流量表或附注]
+    - 购买物业、厂房和设备 (Capex) [来源: 现金流量表]
+    
+    同时提取参考数据：
+    - 总收入 (Total Revenue) [来源: 利润表]
+    - 长期债务 (Long-term Debt) [来源: 资产负债表]
+    - 现金及等价物 (Cash and Equivalents) [来源: 资产负债表]
+    
+    如果工具需要文件路径，请使用输入中提供的: {file_path}。
+  expected_output: >
+    一个包含最近一年提取财务数据的 JSON 对象。
+    示例:
+    {
+      "net_income": 1000000,
+      "depreciation_amortization": 200000,
+      "capex": 150000,
+      "revenue": 5000000,
+      "long_term_debt": 1000000,
+      "cash": 500000
+    }
+  agent: financial_analyst

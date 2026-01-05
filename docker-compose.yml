@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Database for application state (User, Sessions, Steps, Remarks)
+  db:
+    image: postgres:15-alpine
+    container_name: value_analyst_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-value_analyst}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  # Vector Store for RAG / Knowledge
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: value_analyst_chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+  chroma_data:
+
+networks:
+  app_network:
+    driver: bridge

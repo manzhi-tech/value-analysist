@@ -1,0 +1,20 @@
+calculate_intrinsic_value:
+  description: >
+    使用前几步提供的财务数据（净利润、折旧摊销、Capex），计算公司的内在价值。
+    
+    1. 确定“所有者收益 (Owner Earnings)”的输入参数。
+    2. 基于护城河分析估计未来 10 年的保守增长率。
+       - 如果护城河“宽”，使用适度增长（例如 8-12%）。
+       - 如果护城河“窄”或“无”，使用低增长（例如 2-5%）。
+    3. 确定折现率。默认使用 10% (0.10)，除非风险极高。
+    4. 务必使用 `DCFCalculatorTool` 工具进行精确计算。
+    
+    提供的输入：
+    - 财务数据: {financial_data}
+    - 护城河评级: {moat_rating}
+  expected_output: >
+    一份 Markdown 报告，包含：
+    - 详细的 DCF 计算过程 (来自工具输出)。
+    - 内在价值与当前市值的对比（如果已知）或仅展示估值结果。
+    - 最终结论: "被低估 (Undervalued)", "估值合理 (Fairly Valued)", 或 "被高估 (Overvalued)"。
+  agent: valuation_expert

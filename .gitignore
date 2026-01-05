@@ -24,3 +24,6 @@ venv/
 debug_*.py
 src/custom_llm.py
 reports/
+
+backend/uploads
+backend/knowledge

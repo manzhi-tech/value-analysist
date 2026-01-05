@@ -1,0 +1,14 @@
+compare_competitors:
+  description: >
+    识别报告中提到或行业内已知的主要竞争对手。
+    1. 列出 3 个主要竞争对手。
+    2. 在以下维度对比目标公司与竞争对手：
+       - 品牌力量
+       - 成本结构
+       - 规模效应
+    3. 结论：目标公司是行业领导者还是挑战者？
+    
+    必须包含引用 [[Source: Page X]]。
+  expected_output: >
+    一份 Markdown 格式的对比表格和竞争格局分析摘要。
+  agent: competitor_analyst

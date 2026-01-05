@@ -1,0 +1,60 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #6b7280;
+    /* gray-500 */
+    overflow: hidden;
+}
+
+.toolbar {
+    background-color: white;
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    z-index: 10;
+}
+
+.fileName {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pageBtn {
+    padding: 0.25rem 0.5rem;
+    background-color: #f3f4f6;
+    border-radius: 0.25rem;
+    border: none;
+    cursor: pointer;
+}
+
+.pageBtn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.pageInfo {
+    font-size: 0.875rem;
+}
+
+.canvasContainer {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.emptyState {
+    color: white;
+    margin-top: 5rem;
+}

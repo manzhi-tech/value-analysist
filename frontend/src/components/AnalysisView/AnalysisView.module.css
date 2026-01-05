@@ -1,0 +1,128 @@
+.container {
+    flex: 1;
+    background-color: white;
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.spinner {
+    width: 1rem;
+    height: 1rem;
+    background-color: #3b82f6;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.markdown {
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #374151;
+    line-height: 1.6;
+}
+
+.markdown h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #111827;
+}
+
+.markdown h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: #1f2937;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.25rem;
+}
+
+.markdown h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #374151;
+}
+
+.markdown ul,
+.markdown ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+    list-style-type: disc;
+}
+
+.markdown ol {
+    list-style-type: decimal;
+}
+
+.markdown li {
+    margin-bottom: 0.25rem;
+}
+
+.markdown strong {
+    font-weight: 600;
+    color: #111827;
+}
+
+.markdown blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1rem;
+    color: #6b7280;
+    font-style: italic;
+    margin: 1rem 0;
+}
+
+.markdown code {
+    background-color: #f3f4f6;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+    font-size: 0.875em;
+}
+
+.markdown pre {
+    background-color: #1f2937;
+    color: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.markdown pre code {
+    background-color: transparent;
+}
+
+.markdown p {
+    margin-bottom: 0.75rem;
+}
+
+.citationBtn {
+    color: #2563eb;
+    font-weight: 500;
+    background-color: #eff6ff;
+    border-radius: 0.25rem;
+    padding: 0 0.25rem;
+    margin: 0 0.125rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border: none;
+}
+
+.citationBtn:hover {
+    text-decoration: underline;
+}
+
+.emptyState {
+    text-align: center;
+    color: #9ca3af;
+    margin-top: 5rem;
+}
