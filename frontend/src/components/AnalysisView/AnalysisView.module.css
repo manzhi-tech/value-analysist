@@ -126,3 +126,31 @@
     color: #9ca3af;
     margin-top: 5rem;
 }
+/* Markdown Table Styles */
+.markdown table {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.markdown th,
+.markdown td {
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+.markdown th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #111827;
+}
+
+.markdown tr:nth-child(even) {
+    background-color: #fcfcfc;
+}
+
+.markdown tr:hover {
+    background-color: #f3f4f6;
+}

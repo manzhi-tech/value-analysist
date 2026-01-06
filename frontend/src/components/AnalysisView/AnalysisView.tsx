@@ -2,6 +2,7 @@
 
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Citation } from '@/types';
 import styles from './AnalysisView.module.css';
 
@@ -48,6 +49,7 @@ export default function AnalysisView({ content, onCitationClick, isLoading }: An
 
             <div className={styles.markdown}>
                 <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
                     components={{
                         p: ({ node, children }) => {
                             return (
