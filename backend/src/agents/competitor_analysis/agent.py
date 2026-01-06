@@ -25,7 +25,8 @@ class CompetitorCrew:
 
         analysis_task = Task(
             config=self.tasks_config['compare_competitors'],
-            agent=competitor_analyst
+            agent=competitor_analyst,
+            guardrail="每一句话都必须有原文依据，严禁产生幻觉或臆想。"
         )
 
         crew = Crew(

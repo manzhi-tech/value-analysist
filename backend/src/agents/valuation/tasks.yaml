@@ -15,6 +15,7 @@ calculate_intrinsic_value:
     
     输出要求：
     1. 所有内容必须严格使用中文（简体）撰写。
+    2. 如果需要引用，必须严格遵守 [[Page X]] 或 [[Page X-Y]] 格式。
   expected_output: >
     一份 Markdown 中文报告，包含：
     - 详细的 DCF 计算过程 (来自工具输出)。

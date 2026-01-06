@@ -71,7 +71,8 @@ class FinancialAnalysisCrew:
         # 4. 创建任务
         locate_task = Task(
             config=self.tasks_config['locate_financial_tables'],
-            agent=financial_analyst
+            agent=financial_analyst,
+            guardrail="每一个数字都必须有原文依据，严禁产生幻觉或臆想。"
         )
         
         extract_task = Task(

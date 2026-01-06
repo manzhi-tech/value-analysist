@@ -26,7 +26,8 @@ class ValuationCrew:
         # 3. Task
         valuation_task = Task(
             config=self.tasks_config['calculate_intrinsic_value'],
-            agent=valuation_expert
+            agent=valuation_expert,
+            guardrail="每一句话都必须有原文依据，严禁产生幻觉或臆想。"
         )
 
         # 4. Crew

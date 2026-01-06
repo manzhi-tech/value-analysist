@@ -15,24 +15,41 @@ interface AnalysisViewProps {
 export default function AnalysisView({ content, onCitationClick, isLoading }: AnalysisViewProps) {
 
     const renderContent = (text: string) => {
-        // Matches [[Page 6]], [[Source: Page 6]], [Page 6], [Page6]
-        const regex = /\[\[?(?:Source:\s*)?Page\s*(\d+)\]?\]/gi;
+        // Matches [[Page 6]], [[Source: Page 6]], [Page 6], [Page 4-5], [Page 4, Page 5], [Page 4-5, Page 36-37]
+        // Captures the entire citation block
+        const regex = /(\[\[?(?:Source:\s*)?Page\s*(?:[\d\-\s,]+(?:Page)?)*\]?\])/gi;
         const parts = text.split(regex);
 
         if (parts.length === 1) return text;
 
         return parts.map((part, i) => {
-            if (i % 2 === 1) {
-                const pageNum = parseInt(part);
-                return (
-                    <button
-                        key={i}
-                        onClick={() => onCitationClick({ page: pageNum })}
-                        className={styles.citationBtn}
-                    >
-                        [Page {pageNum}]
-                    </button>
-                );
+            // Check if this part is a citation block
+            if (part.match(regex)) {
+                // Extract all page numbers/ranges from the block
+                // Matches "4", "4-5", "36-37"
+                const pageNumRegex = /(\d+(?:-\d+)?)/g;
+                const matches = [...part.matchAll(pageNumRegex)];
+
+                if (matches.length > 0) {
+                    return (
+                        <span key={i} className={styles.citationGroup}>
+                            {matches.map((match, index) => {
+                                const pageStr = match[1];
+                                const startPage = parseInt(pageStr.split('-')[0]);
+                                return (
+                                    <button
+                                        key={index}
+                                        onClick={() => onCitationClick({ page: startPage })}
+                                        className={styles.citationBtn}
+                                        style={{ marginLeft: index > 0 ? '4px' : '0' }}
+                                    >
+                                        [Page {pageStr}]
+                                    </button>
+                                );
+                            })}
+                        </span>
+                    );
+                }
             }
             return part;
         });
