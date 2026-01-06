@@ -38,6 +38,15 @@ export default function AnalysisView({ content, onCitationClick, isLoading }: An
         });
     };
 
+    const processChildren = (children: React.ReactNode) => {
+        return React.Children.map(children, child => {
+            if (typeof child === 'string') {
+                return renderContent(child);
+            }
+            return child;
+        });
+    };
+
     return (
         <div className={styles.container}>
             {isLoading && (
@@ -51,18 +60,15 @@ export default function AnalysisView({ content, onCitationClick, isLoading }: An
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                        p: ({ node, children }) => {
-                            return (
-                                <p>
-                                    {React.Children.map(children, child => {
-                                        if (typeof child === 'string') {
-                                            return renderContent(child);
-                                        }
-                                        return child;
-                                    })}
-                                </p>
-                            )
-                        }
+                        p: ({ node, children, ...props }) => <p {...props}>{processChildren(children)}</p>,
+                        li: ({ node, children, ...props }) => <li {...props}>{processChildren(children)}</li>,
+                        h1: ({ node, children, ...props }) => <h1 {...props}>{processChildren(children)}</h1>,
+                        h2: ({ node, children, ...props }) => <h2 {...props}>{processChildren(children)}</h2>,
+                        h3: ({ node, children, ...props }) => <h3 {...props}>{processChildren(children)}</h3>,
+                        h4: ({ node, children, ...props }) => <h4 {...props}>{processChildren(children)}</h4>,
+                        h5: ({ node, children, ...props }) => <h5 {...props}>{processChildren(children)}</h5>,
+                        h6: ({ node, children, ...props }) => <h6 {...props}>{processChildren(children)}</h6>,
+                        blockquote: ({ node, children, ...props }) => <blockquote {...props}>{processChildren(children)}</blockquote>,
                     }}
                 >
                     {content}
