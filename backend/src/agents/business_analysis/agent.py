@@ -5,7 +5,9 @@ import os
 import logging
 from src.core.llm_factory import llm_factory
 from src.agents.base_agent import AgentConfigLoader
-from src.core.config import get_settings
+from src.core.config import get_settingsfrom crewai.knowledge.knowledge_config import KnowledgeConfig
+
+knowledge_config = KnowledgeConfig(results_limit=10, score_threshold=0.5)
 
 # ==============================================================================
 # Monkey Patching moved to src/core/patch.py
@@ -78,7 +80,8 @@ class BusinessAnalysisCrew:
             llm=self.llm,
             knowledge_sources=[knowledge_source],
             verbose=True,
-            embedder=embedder_config
+            embedder=embedder_config,
+            knowledge_config=knowledge_config
         )
 
         # 4. 创建任务

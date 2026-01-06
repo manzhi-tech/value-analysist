@@ -296,14 +296,17 @@ async def run_competitor_analysis(session_id: str, background_tasks: BackgroundT
     background_tasks.add_task(_run_competitor_analysis_task, session_id, session.file_paths)
     return {"status": "PENDING", "message": "竞争对手分析已启动"}
 
-def _run_valuation_task(session_id: str, financial_data: dict, moat_rating: str):
+def _run_valuation_task(session_id: str, financial_data: dict, moat_rating: str, file_paths: list[str]):
     try:
         session = get_session(session_id)
         if not session: return
         session.valuation_status = "RUNNING"
         update_session(session)
         
-        crew = ValuationCrew(financial_data=financial_data, moat_rating=moat_rating)
+        # Convert paths
+        rel_paths = _to_knowledge_relative(file_paths)
+        
+        crew = ValuationCrew(financial_data=financial_data, moat_rating=moat_rating, file_paths=rel_paths)
         result = crew.run()
         
         session.valuation_result = str(result)
@@ -338,7 +341,7 @@ async def run_valuation(session_id: str, background_tasks: BackgroundTasks):
     }
     moat_rating = "Narrow"
     
-    background_tasks.add_task(_run_valuation_task, session_id, financial_data, moat_rating)
+    background_tasks.add_task(_run_valuation_task, session_id, financial_data, moat_rating, session.file_paths)
     return {"status": "PENDING", "message": "估值分析已启动"}
 
 @router.get("/session/{session_id}")
