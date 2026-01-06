@@ -71,21 +71,26 @@ class FinancialAnalysisCrew:
         # 4. 创建任务
         locate_task = Task(
             config=self.tasks_config['locate_financial_tables'],
-            agent=financial_analyst,
-            guardrail="每一个数字都必须有原文依据，严禁产生幻觉或臆想。"
+            agent=financial_analyst
         )
         
         extract_task = Task(
             config=self.tasks_config['extract_financial_data'],
             agent=financial_analyst,
-            context=[locate_task] # 传递定位任务的结果
+            context=[locate_task], # 传递定位任务的结果
+            guardrail="每一个数字都必须有原文依据，严禁产生幻觉或臆想。"
         )
 
+        format_task = Task(
+            config=self.tasks_config['format_valuation_report'],
+            agent=financial_analyst,
+            context=[extract_task]
+        )
 
         # 5. 创建 Crew
         crew = Crew(
             agents=[financial_analyst],
-            tasks=[locate_task, extract_task],
+            tasks=[locate_task, extract_task, format_task],
             process=Process.sequential,
             verbose=True
         )

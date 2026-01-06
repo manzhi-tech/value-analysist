@@ -13,29 +13,59 @@ locate_financial_tables:
 
 extract_financial_data:
   description: >
-    使用在上一个任务中找到的页码，提取计算所有者收益所需的关键数据。
+    使用在上一个任务中找到的页码，提取**估值建模 (Valuation Modeling)** 所需的全面财务数据。
     务必使用 `FinancialTableTool` 工具进行精准提取。
     
-    需要提取的数据：
-    - 净利润 (Net Income) [来源: 利润表]
-    - 折旧和摊销 (Depreciation and Amortization) [来源: 现金流量表或附注]
-    - 购买物业、厂房和设备 (Capex) [来源: 现金流量表]
+    请提取以下关键数据点（如果适用）：
     
-    同时提取参考数据：
-    - 总收入 (Total Revenue) [来源: 利润表]
-    - 长期债务 (Long-term Debt) [来源: 资产负债表]
-    - 现金及等价物 (Cash and Equivalents) [来源: 资产负债表]
+    **1. 利润表 (Income Statement)**:
+    - 营业总收入 (Total Revenue)
+    - 营业成本 (Operating Costs/COGS)
+    - 销售费用 (Selling Expenses)
+    - 管理费用 (Administrative Expenses)
+    - 研发费用 (R&D Expenses)
+    - 财务费用 (Financial Expenses - 需注意利息支出)
+    - 营业利润 (Operating Income)
+    - 利润总额 (Total Profit)
+    - 净利润 (Net Income)
+    - 归属于母公司所有者的净利润 (Net Income to Parent)
+    
+    **2. 现金流量表 (Cash Flow Statement)**:
+    - 经营活动产生的现金流量净额 (Cash Flow from Operations - CFO)
+    - 购建固定资产、无形资产和其他长期资产支付的现金 (Capital Expenditures - Capex)
+    - 折旧与摊销 (Depreciation & Amortization - 需从附注或现金流补充资料中查找)
+    
+    **3. 资产负债表 (Balance Sheet)**:
+    - 货币资金 (Cash & Equivalents)
+    - 应收账款 (Accounts Receivable)
+    - 存货 (Inventory)
+    - 流动资产合计 (Total Current Assets)
+    - 固定资产 (Fixed Assets)
+    - 在建工程 (Construction in Progress)
+    - 短期借款 (Short-term Debt)
+    - 长期借款 (Long-term Debt)
+    - 应付债券 (Bonds Payable)
+    - 流动负债合计 (Total Current Liabilities)
+    - 非流动负债合计 (Total Non-current Liabilities)
+    - 负债合计 (Total Liabilities)
+    - 所有者权益合计 (Total Equity)
     
     如果工具需要文件路径，请使用输入中提供的: {file_path}。
   expected_output: >
-    一个包含最近一年提取财务数据的 JSON 对象。
-    示例:
-    {
-      "net_income": 1000000,
-      "depreciation_amortization": 200000,
-      "capex": 150000,
-      "revenue": 5000000,
-      "long_term_debt": 1000000,
-      "cash": 500000
-    }
+    包含上述所有字段的 JSON 对象。如果某项数据缺失，请标记为 null 或 "N/A"。
+  agent: financial_analyst
+
+format_valuation_report:
+  description: >
+    根据提取的财务数据，生成一份**Markdown格式**的财务分析报告。
+    
+    报告应包含以下部分：
+    1. **摘要 (Executive Summary)**: 简要概述公司的财务状况。
+    2. **估值建模数据表 (Valuation Modeling Data)**: 一个清晰的 Markdown 表格，列出所有为估值建模提取的数据。表格应有两列：“项目 (Item)” 和 “数值 (Value)”。
+       - 确保数值包含单位（如：元、万元、亿元），根据原报表保持一致。
+    3. **关键比率 (Key Ratios)**: 基于提取的数据，计算并列出几个关键比率（如毛利率、净利率、资产负债率），并做简短点评。
+    
+    目标是让用户可以直接读取这些数据用于构建 DCF 或相对估值模型。
+  expected_output: >
+    格式良好的 Markdown 文本，包含估值所需的所有核心数据。
   agent: financial_analyst

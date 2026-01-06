@@ -27,3 +27,7 @@ reports/
 
 backend/uploads
 backend/knowledge
+
+# Database
+value_analyst.db
+*.db
