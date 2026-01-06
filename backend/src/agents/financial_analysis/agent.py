@@ -78,7 +78,7 @@ class FinancialAnalysisCrew:
             config=self.tasks_config['extract_financial_data'],
             agent=financial_analyst,
             context=[locate_task], # 传递定位任务的结果
-            guardrail="每一个数字都必须有原文依据，严禁产生幻觉或臆想。"
+            guardrail="每一个数字都必须有原文依据，严禁产生幻觉或臆想。报告必须全中文。引用格式必须为 [[Page X]]。"
         )
 
         format_task = Task(
