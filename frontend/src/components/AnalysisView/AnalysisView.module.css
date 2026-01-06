@@ -5,20 +5,6 @@
     overflow-y: auto;
 }
 
-.loading {
-    display: flex;
-    align-items: center;
-    color: #6b7280;
-    margin-bottom: 1rem;
-}
-
-.spinner {
-    width: 1rem;
-    height: 1rem;
-    background-color: #3b82f6;
-    border-radius: 50%;
-    margin-right: 0.5rem;
-}
 
 .markdown {
     font-family: system-ui, -apple-system, sans-serif;
@@ -126,6 +112,7 @@
     color: #9ca3af;
     margin-top: 5rem;
 }
+
 /* Markdown Table Styles */
 .markdown table {
     width: 100%;

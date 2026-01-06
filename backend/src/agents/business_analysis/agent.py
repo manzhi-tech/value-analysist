@@ -43,44 +43,21 @@ class BusinessAnalysisCrew:
         os.environ["OPENAI_EMBEDDING_MODEL"] = embedding_model 
         
         # 1. 设置知识源
-        # Files are stored in "uploads/knowledge"
-        # We have a symlink "knowledge" -> "uploads/knowledge" for CrewAI compatibility
+        # Paths are now relative to the "knowledge" directory (passed from routes.py)
+        # We trust CrewAI to handle "knowledge/{rel_path}" internally.
         
-        knowledge_dir = Path("uploads/knowledge")
-        knowledge_dir.mkdir(parents=True, exist_ok=True)
-            
-        params_paths = []
+        # Verify files exist in the knowledge/ folder
+        valid_paths = []
+        knowledge_root = Path("knowledge")
         for p in self.file_paths:
-            path_obj = Path(p)
-            if not path_obj.exists():
-                cleaned = p.strip('"\'')
-                if Path(cleaned).exists():
-                    path_obj = Path(cleaned)
-                else:
-                    logger.error(f"Original file not found: {p}")
-                    continue
-            
-            # Determine if file is already in knowledge dir
-            # resolve() handles absolute paths comparison
-            if path_obj.parent.resolve() == knowledge_dir.resolve():
-                # Already in the right place, just use the filename
-                params_paths.append(path_obj.name)
+            # Check existence relative to knowledge/
+            full_path = knowledge_root / p
+            if full_path.exists():
+                valid_paths.append(p)
             else:
-                # Need to symlink/copy to knowledge dir
-                target_link = knowledge_dir / path_obj.name
-                try:
-                    if target_link.exists():
-                        target_link.unlink()
-                    os.symlink(path_obj.absolute(), target_link)
-                    logger.info(f"Symlinked {path_obj} to {target_link}")
-                    params_paths.append(path_obj.name)
-                except Exception as e:
-                    logger.error(f"Failed to symlink {path_obj}: {e}")
-                    import shutil
-                    shutil.copy(path_obj, target_link)
-                    params_paths.append(path_obj.name)
+                logger.error(f"File not found in knowledge dir: {full_path}")
 
-        if not params_paths:
+        if not valid_paths:
             raise ValueError(f"No valid files to process. Inputs: {self.file_paths}")
 
         embedder_config = {
@@ -93,7 +70,7 @@ class BusinessAnalysisCrew:
         }
         logger.info(f"Using Embedder Config: {embedder_config}")
 
-        knowledge_source = PDFKnowledgeSource(file_paths=params_paths)
+        knowledge_source = PDFKnowledgeSource(file_paths=valid_paths)
         
         # 3. 创建 Agent
         business_analyst = Agent(

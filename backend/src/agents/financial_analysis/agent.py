@@ -43,10 +43,8 @@ class FinancialAnalysisCrew:
 
 
         # 1. "定位表格" 的知识源 (语义搜索)
-        # Rely on "knowledge" -> "uploads/knowledge" symlink
-        path_obj = Path(self.file_path)
-        
-        knowledge_source = PDFKnowledgeSource(file_paths=[path_obj.name])
+        # Use full path
+        knowledge_source = PDFKnowledgeSource(file_paths=[self.file_path])
         
         # 2. "提取表格" 的工具
         table_tool = FinancialTableTool()

@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Loading from '../Loading/Loading';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Citation } from '@/types';
@@ -64,14 +65,12 @@ export default function AnalysisView({ content, onCitationClick, isLoading }: An
         });
     };
 
+    if (isLoading) {
+        return <Loading />;
+    }
+
     return (
         <div className={styles.container}>
-            {isLoading && (
-                <div className={styles.loading}>
-                    <div className={styles.spinner}></div>
-                    <span>Analyzing...</span>
-                </div>
-            )}
 
             <div className={styles.markdown}>
                 <ReactMarkdown

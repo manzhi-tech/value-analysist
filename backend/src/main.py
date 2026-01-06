@@ -14,8 +14,8 @@ app = FastAPI(title="Value Analyst Backend")
 
 # 挂载上传目录以提供文件服务
 # 确保目录存在
-os.makedirs("uploads", exist_ok=True)
-app.mount("/static", StaticFiles(directory="uploads"), name="static")
+os.makedirs("knowledge", exist_ok=True)
+app.mount("/static", StaticFiles(directory="knowledge"), name="static")
 
 app.add_middleware(
     CORSMiddleware,

@@ -13,8 +13,7 @@ class CompetitorCrew:
 
     def run(self) -> str:
         # Re-use the same knowledge source logic
-        filenames = [Path(p).name for p in self.file_paths]
-        knowledge_source = PDFKnowledgeSource(file_paths=filenames)
+        knowledge_source = PDFKnowledgeSource(file_paths=self.file_paths)
 
         competitor_analyst = Agent(
             config=self.agents_config['competitor_analyst'],

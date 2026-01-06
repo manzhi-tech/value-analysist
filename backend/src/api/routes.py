@@ -11,25 +11,8 @@ import os
 import json
 
 router = APIRouter()
-UPLOAD_DIR = "uploads/knowledge"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-# Ensure "knowledge" symlink exists for CrewAI compatibility
-# CrewAI defaults to looking in "knowledge/" directory
-if not os.path.exists("knowledge"):
-    try:
-        os.symlink(UPLOAD_DIR, "knowledge")
-    except Exception as e:
-        print(f"Failed to create knowledge symlink: {e}")
-elif os.path.islink("knowledge"):
-    # Check if it points to the right place
-    if os.readlink("knowledge") != UPLOAD_DIR:
-        try:
-            os.unlink("knowledge")
-            os.symlink(UPLOAD_DIR, "knowledge")
-        except Exception as e:
-            print(f"Failed to update knowledge symlink: {e}")
-
+UPLOAD_ROOT = "knowledge"
+os.makedirs(UPLOAD_ROOT, exist_ok=True)
 
 @router.get("/sessions")
 async def get_all_sessions():
@@ -37,18 +20,31 @@ async def get_all_sessions():
 
 @router.post("/upload")
 async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
-    file_location = f"{UPLOAD_DIR}/{file.filename}"
+    # 1. Create Session First to get ID
+    # Use placeholder path initially
+    session = create_session(file_path="", file_name=file.filename)
+    
+    # 2. Create Session Directory
+    session_dir = os.path.join(UPLOAD_ROOT, session.id)
+    os.makedirs(session_dir, exist_ok=True)
+    
+    # 3. Save File
+    file_location = os.path.join(session_dir, file.filename)
     with open(file_location, "wb+") as file_object:
         shutil.copyfileobj(file.file, file_object)
     
-    # 使用绝对路径进行后端处理
+    # 4. Update Session with Absolute Path
     abs_path = os.path.abspath(file_location)
-    session = create_session(file_path=abs_path, file_name=file.filename)
+    
+    # Update the single path field used by create_session (which sets file_paths_json)
+    # Since create_session is already done, we update via property
+    session.file_paths = [abs_path]
+    update_session(session)
     
     # Trigger Title Generation
     background_tasks.add_task(generate_session_title, session.id, abs_path)
     
-    return {"session_id": session.id, "message": "文件上传成功", "file_path": f"/static/{file.filename}"}
+    return {"session_id": session.id, "message": "文件上传成功", "file_path": f"/static/{session.id}/{file.filename}"}
 
 @router.post("/session/{session_id}/upload")
 async def add_file_to_session(session_id: str, file: UploadFile = File(...)):
@@ -56,7 +52,10 @@ async def add_file_to_session(session_id: str, file: UploadFile = File(...)):
     if not session:
         raise HTTPException(status_code=404, detail="会话未找到")
         
-    file_location = f"{UPLOAD_DIR}/{file.filename}"
+    session_dir = os.path.join(UPLOAD_ROOT, session_id)
+    os.makedirs(session_dir, exist_ok=True)
+    
+    file_location = os.path.join(session_dir, file.filename)
     with open(file_location, "wb+") as file_object:
         shutil.copyfileobj(file.file, file_object)
         
@@ -96,9 +95,52 @@ async def delete_file_from_session(session_id: str, filename: str):
     session.file_paths = new_paths
     update_session(session)
     
+    # Optionally delete from disk
+    if target_path and os.path.exists(target_path):
+        try:
+            os.remove(target_path)
+        except Exception as e:
+            print(f"Failed to delete file {target_path}: {e}")
+    
     return {"message": "文件删除成功", "file_paths": session.file_paths}
 
+# Helper to convert absolute paths to knowledge-relative paths
+def _to_knowledge_relative(file_paths: list[str]) -> list[str]:
+    # We want "session_id/filename.pdf" or just "filename.pdf" depending on structure
+    # Robust logic: find split point
+    rel_paths = []
+    
+    for p in file_paths:
+        # Normalization
+        p_str = str(p)
+        
+        # Try to split by 'knowledge/' or 'uploads/'
+        # We take the *last* component to be safe against full path having multiple
+        
+        if '/knowledge/' in p_str:
+            rel = p_str.split('/knowledge/')[-1]
+            rel_paths.append(rel)
+        elif '/uploads/' in p_str:
+            rel = p_str.split('/uploads/')[-1]
+            rel_paths.append(rel)
+        else:
+            # Fallback: if it's already just a filename or relative path
+            # check if it exists in UPLOAD_ROOT
+            if os.path.exists(os.path.join(UPLOAD_ROOT, p_str)):
+                rel_paths.append(p_str)
+            else:
+                # Just assume it might be relative
+                rel_paths.append(p_str)
+                
+    print(f"DEBUG: Converted paths {file_paths} -> {rel_paths}")
+    return rel_paths
+
+def _to_knowledge_relative_single(file_path: str) -> str:
+    res = _to_knowledge_relative([file_path])
+    return res[0] if res else file_path
+
 # Helper Tasks
+# ...
 def _run_business_analysis_task(session_id: str, file_paths: list[str]):
     try:
         # Re-fetch session to ensure fresh state or just use ID to update
@@ -109,7 +151,11 @@ def _run_business_analysis_task(session_id: str, file_paths: list[str]):
         session.business_status = "RUNNING"
         update_session(session)
         
-        crew = BusinessAnalysisCrew(file_paths=file_paths)
+        # Convert to relative paths for CrewAI
+        rel_paths = _to_knowledge_relative(file_paths)
+        print(f"DEBUG: Running Business Analysis with paths: {rel_paths}")
+        
+        crew = BusinessAnalysisCrew(file_paths=rel_paths)
         result = crew.run()
         
         session.business_analysis_result = str(result)
@@ -118,6 +164,8 @@ def _run_business_analysis_task(session_id: str, file_paths: list[str]):
         
     except Exception as e:
         print(f"Error in business analysis task: {e}")
+        import traceback
+        traceback.print_exc()
         session = get_session(session_id)
         if session:
             session.business_status = "FAILED"
@@ -146,7 +194,10 @@ def _run_financial_analysis_task(session_id: str, file_path: str):
         session.financial_status = "RUNNING"
         update_session(session)
         
-        crew = FinancialAnalysisCrew(file_path=file_path)
+        # Relative path
+        rel_path = _to_knowledge_relative_single(file_path)
+        
+        crew = FinancialAnalysisCrew(file_path=rel_path)
         result = crew.run()
         
         session.financial_analysis_result = str(result)
@@ -182,7 +233,9 @@ def _run_mda_analysis_task(session_id: str, file_paths: list[str]):
         session.mda_status = "RUNNING"
         update_session(session)
         
-        crew = MDACrew(file_paths=file_paths)
+        rel_paths = _to_knowledge_relative(file_paths)
+        
+        crew = MDACrew(file_paths=rel_paths)
         result = crew.run()
         
         session.mda_analysis_result = str(result)
@@ -215,7 +268,9 @@ def _run_competitor_analysis_task(session_id: str, file_paths: list[str]):
         session.competitor_status = "RUNNING"
         update_session(session)
         
-        crew = CompetitorCrew(file_paths=file_paths)
+        rel_paths = _to_knowledge_relative(file_paths)
+        
+        crew = CompetitorCrew(file_paths=rel_paths)
         result = crew.run()
         
         session.competitor_analysis_result = str(result)
@@ -313,16 +368,21 @@ async def export_session(session_id: str):
         zip_file.writestr("session.json", session_data)
         
         # 2. Add Files
+        session_dir = os.path.join(UPLOAD_ROOT, session.id)
         for file_path in session.file_paths:
-            # Clean file path to handle /static/ prefix
-            # Assuming file_path stored as "/static/filename.pdf"
-            filename = os.path.basename(file_path)
-            actual_path = os.path.join("uploads", filename)
-            
-            if os.path.exists(actual_path):
-                zip_file.write(actual_path, arcname=f"files/{filename}")
+            # File path is absolute path like /Users/.../backend/uploads/{session_id}/filename.pdf
+            # Just verify it exists and add it
+            if os.path.exists(file_path):
+                filename = os.path.basename(file_path)
+                zip_file.write(file_path, arcname=f"files/{filename}")
             else:
-                print(f"Warning: File not found during export: {actual_path}")
+                # Fallback: check if it's in the session dir by name (legacy support)
+                filename = os.path.basename(file_path)
+                fallback_path = os.path.join(session_dir, filename)
+                if os.path.exists(fallback_path):
+                    zip_file.write(fallback_path, arcname=f"files/{filename}")
+                else:
+                    print(f"Warning: File not found during export: {file_path}")
     
     zip_buffer.seek(0)
     
@@ -355,23 +415,37 @@ async def import_session(file: UploadFile = File(...)):
             
             session_json = zip_ref.read("session.json")
             session_dict = json.loads(session_json)
-            
+            session_id = session_dict.get("id")
+            if not session_id:
+                 raise HTTPException(status_code=400, detail="Invalid session data: missing ID")
+
             # 2. Restore Files
-            os.makedirs("uploads", exist_ok=True)
+            session_dir = os.path.join(UPLOAD_ROOT, session_id)
+            os.makedirs(session_dir, exist_ok=True)
+            
+            restored_paths = []
+            
             for file_info in zip_ref.infolist():
                 if file_info.filename.startswith("files/") and not file_info.is_dir():
                     # Extract filename from files/xxx.pdf
                     target_filename = os.path.basename(file_info.filename)
                     if not target_filename: continue
                     
-                    target_path = os.path.join("uploads", target_filename)
+                    target_path = os.path.join(session_dir, target_filename)
                     
                     # Prevent path traversal? basename protects us primarily
                     with open(target_path, "wb") as f:
                         f.write(zip_ref.read(file_info))
+                    
+                    restored_paths.append(os.path.abspath(target_path))
                         
             # 3. Restore Session to DB
             session_obj = AnalysisSession.model_validate(session_dict)
+            
+            # Update paths to the current system's absolute paths
+            # Note: We overwrite whatever was in the JSON because paths are local-system dependent
+            if restored_paths:
+                session_obj.file_paths = restored_paths
             
             # Upsert
             existing = get_session(session_obj.id)

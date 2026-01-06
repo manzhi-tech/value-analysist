@@ -12,8 +12,7 @@ class MDACrew:
         self.llm = llm_factory.get_llm()
 
     def run(self) -> str:
-        filenames = [Path(p).name for p in self.file_paths]
-        knowledge_source = PDFKnowledgeSource(file_paths=filenames)
+        knowledge_source = PDFKnowledgeSource(file_paths=self.file_paths)
 
         mda_analyst = Agent(
             config=self.agents_config['mda_analyst'],
