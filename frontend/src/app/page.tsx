@@ -232,6 +232,53 @@ export default function Home() {
     );
   }
 
+  const handleFileDelete = async (fileKey: string) => {
+    if (!session) return;
+    if (!confirm("确定要删除这个文件吗？")) return;
+
+    // fileKey is like '/static/filename.pdf'
+    // Extract filename
+    const parts = fileKey.split('/');
+    const filename = parts[parts.length - 1];
+
+    try {
+      const res = await fetch(`http://localhost:8001/api/session/${session.id}/file?filename=${filename}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) {
+        throw new Error('Deletion failed');
+      }
+
+      const data = await res.json();
+
+      // Update local session state
+      // We can either refetch or update manually. Let's force a refetch/poll will pick it up.
+      // But to be responsive, let's update local list if possible or just alert.
+      // The polling `checkStatus` will likely overwrite our manual update if we don't handle it carefully.
+      // Ideally wait for polling or just trigger a fetch.
+
+      // Since polling runs every 3s, let's just wait or force a checkStatus call if we could.
+      // We can also optimistically update the session object.
+
+      if (data.file_paths) {
+        // Backend returns absolute paths, we need to process them again if we want to update local immediately
+        // Or just wait for the next poll cycle which is simpler.
+      }
+
+      // If the deleted file was the current viewing file, clear it
+      if (currentFile === fileKey) {
+        setCurrentFile(undefined);
+      }
+
+      alert("文件删除成功");
+
+    } catch (err) {
+      console.error(err);
+      alert("删除失败");
+    }
+  };
+
   return (
     <main className={styles.container}>
       <Sidebar
@@ -243,6 +290,7 @@ export default function Home() {
         onFileSelect={setCurrentFile}
 
         onUploadFile={handleFileUpload}
+        onDeleteFile={handleFileDelete}
         onBack={handleBackToList}
       />
 

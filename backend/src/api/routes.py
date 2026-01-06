@@ -71,6 +71,33 @@ async def add_file_to_session(session_id: str, file: UploadFile = File(...)):
         
     return {"message": "文件添加成功", "file_paths": session.file_paths}
 
+@router.delete("/session/{session_id}/file")
+async def delete_file_from_session(session_id: str, filename: str):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="会话未找到")
+    
+    # Check if file is in session
+    # stored paths are absolute. We check if any path ends with /{filename}
+    target_path = None
+    new_paths = []
+    found = False
+    
+    for path in session.file_paths:
+        if path.endswith(f"/{filename}") or path.endswith(f"\\{filename}"):
+            target_path = path
+            found = True
+        else:
+            new_paths.append(path)
+            
+    if not found:
+        raise HTTPException(status_code=404, detail="文件在会话中未找到")
+        
+    session.file_paths = new_paths
+    update_session(session)
+    
+    return {"message": "文件删除成功", "file_paths": session.file_paths}
+
 # Helper Tasks
 def _run_business_analysis_task(session_id: str, file_paths: list[str]):
     try:

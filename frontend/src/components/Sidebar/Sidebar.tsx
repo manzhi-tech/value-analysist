@@ -14,6 +14,7 @@ interface SidebarProps {
     sessionId?: string;
     currentFile?: string;
     onFileSelect?: (file: string) => void;
+    onDeleteFile?: (file: string) => void;
 
     // New props
     onUploadFile?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -36,6 +37,7 @@ export default function Sidebar({
     sessionId,
     currentFile,
     onFileSelect,
+    onDeleteFile,
     onUploadFile,
     onBack
 }: SidebarProps) {
@@ -83,11 +85,26 @@ export default function Sidebar({
                                     style={{
                                         cursor: 'pointer',
                                         backgroundColor: isSelected ? '#e5e7eb' : 'transparent',
-                                        borderRadius: '0.25rem'
+                                        borderRadius: '0.25rem',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
                                     }}
                                 >
-                                    <FileText size={16} className="mr-2 text-blue-500" />
-                                    <span className="truncate">{file.split('/').pop()}</span>
+                                    <div className="flex items-center overflow-hidden">
+                                        <FileText size={16} className="mr-2 text-blue-500 flex-shrink-0" />
+                                        <span className="truncate">{file.split('/').pop()}</span>
+                                    </div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (onDeleteFile) onDeleteFile(file);
+                                        }}
+                                        className="text-gray-400 hover:text-red-500 ml-2"
+                                        title="删除文件"
+                                    >
+                                        ×
+                                    </button>
                                 </li>
                             );
                         })}
