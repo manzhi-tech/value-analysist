@@ -66,50 +66,62 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchSessions();
-  }, [session]); // Refresh list when current session changes (e.g. title updated)
+    if (!session) {
+      fetchSessions();
+    }
+  }, [session]); // Refresh list when returning to list (session becomes null)
 
-  // Poll for status
-  useEffect(() => {
-    if (!session) return;
-
-    const checkStatus = async () => {
-      try {
-        const res = await fetch(`http://localhost:8001/api/session/${session.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.file_paths_json) {
-            try {
-              const paths = JSON.parse(data.file_paths_json);
-              data.file_paths = processFilePaths(paths);
-
-              if (data.file_paths.length > 0) {
-                // Use the first file as default file_path for compatibility
-                data.file_path = data.file_paths[0];
-              }
-            } catch (e) {
-              // ignore parse error
+  // Helper to fetch status (defined outside effects to reuse)
+  const checkStatus = async () => {
+    if (!session?.id) return;
+    try {
+      const res = await fetch(`http://localhost:8001/api/session/${session.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.file_paths_json) {
+          try {
+            const paths = JSON.parse(data.file_paths_json);
+            data.file_paths = processFilePaths(paths);
+            if (data.file_paths.length > 0) {
+              data.file_path = data.file_paths[0];
             }
-          }
-          setSession(data);
-
-          // If no current file selected, select the first one
-          if (!currentFile && data.file_paths && data.file_paths.length > 0) {
-            setCurrentFile(data.file_paths[0]);
-          }
+          } catch (e) { }
         }
-      } catch (e) {
-        console.error("Polling error", e);
+
+        setSession(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+          return data;
+        });
+
+        setCurrentFile(prev => {
+          if (!prev && data.file_paths && data.file_paths.length > 0) return data.file_paths[0];
+          return prev;
+        });
       }
-    };
+    } catch (e) {
+      console.error("Polling error", e);
+    }
+  };
 
-    // Immediate check
-    checkStatus();
+  // 1. Initial status check when switching sessions or mounting
+  useEffect(() => {
+    if (session?.id) {
+      checkStatus();
+    }
+  }, [session?.id]);
 
-    // Set interval
-    const interval = setInterval(checkStatus, 3000); // 3s polling
+  // Derived state for running status
+  const isAnyRunning = session ? Object.values(stepMapping).some(mapping =>
+    session[mapping.status] === 'RUNNING'
+  ) : false;
+
+  // 2. Polling interval - only active when running
+  useEffect(() => {
+    if (!isAnyRunning || !session?.id) return;
+
+    const interval = setInterval(checkStatus, 3000);
     return () => clearInterval(interval);
-  }, [session?.id]); // Only recreate if session ID changes
+  }, [isAnyRunning, session?.id]);
 
   // Derived state for current step
   const currentStatus = session ? session[stepMapping[currentStep].status] as string : 'PENDING';
@@ -201,6 +213,16 @@ export default function Home() {
 
   const runAnalysis = async () => {
     if (!session) return;
+
+    // Optimistically update status to RUNNING to trigger polling
+    setSession(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        [stepMapping[currentStep].status]: 'RUNNING'
+      };
+    });
+
     try {
       await fetch(`http://localhost:8001/api/analyze/${session.id}/${currentStep}`, {
         method: 'POST'
