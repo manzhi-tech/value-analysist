@@ -107,7 +107,8 @@ class BusinessAnalysisCrew:
         # 4. 创建任务
         analysis_task = Task(
             config=self.tasks_config['analyze_business_model'],
-            agent=business_analyst
+            agent=business_analyst,
+            guardrail="每一句话都必须有原文依据，严禁产生幻觉或臆想。"
         )
 
         # 5. 创建 Crew

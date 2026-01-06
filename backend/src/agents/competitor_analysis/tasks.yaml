@@ -8,7 +8,12 @@ compare_competitors:
        - 规模效应
     3. 结论：目标公司是行业领导者还是挑战者？
     
-    必须包含引用 [[Source: Page X]]。
+    重要：必须使用以下格式引用你发现信息的来源页码：[[Page X]] (例如 [[Page 6]])。
+    每一句话都必须有原文依据，严禁产生幻觉或臆想。
+    
+    输出要求：
+    1. 所有内容必须严格使用中文（简体）撰写。
   expected_output: >
-    一份 Markdown 格式的对比表格和竞争格局分析摘要。
+    一份 Markdown 格式的中文对比表格和竞争格局分析摘要。
+    所有观点必须包含引用 [[Page X]]。报告必须是中文。
   agent: competitor_analyst

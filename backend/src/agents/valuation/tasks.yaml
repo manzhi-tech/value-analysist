@@ -12,9 +12,13 @@ calculate_intrinsic_value:
     提供的输入：
     - 财务数据: {financial_data}
     - 护城河评级: {moat_rating}
+    
+    输出要求：
+    1. 所有内容必须严格使用中文（简体）撰写。
   expected_output: >
-    一份 Markdown 报告，包含：
+    一份 Markdown 中文报告，包含：
     - 详细的 DCF 计算过程 (来自工具输出)。
     - 内在价值与当前市值的对比（如果已知）或仅展示估值结果。
     - 最终结论: "被低估 (Undervalued)", "估值合理 (Fairly Valued)", 或 "被高估 (Overvalued)"。
+    报告必须是中文。
   agent: valuation_expert
