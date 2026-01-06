@@ -12,6 +12,8 @@ const DocViewer = dynamic(() => import('@/components/DocViewer/DocViewer'), {
 import { AnalysisSession, Citation } from '@/types';
 import styles from './page.module.css';
 
+import SessionList from '@/components/SessionList/SessionList';
+
 export default function Home() {
   // Map step IDs to backend fields
   const stepMapping: Record<string, { status: keyof AnalysisSession, result: keyof AnalysisSession }> = {
@@ -23,11 +25,49 @@ export default function Home() {
   };
 
   const [session, setSession] = useState<AnalysisSession | null>(null);
+  const [sessions, setSessions] = useState<AnalysisSession[]>([]);
   const [currentFile, setCurrentFile] = useState<string | undefined>(undefined);
   const [currentStep, setCurrentStep] = useState<string>('business');
 
   const [targetPage, setTargetPage] = useState<number>(1);
   const [highlightRect, setHighlightRect] = useState<[number, number, number, number] | undefined>(undefined);
+
+  // Helper to convert backend paths to frontend static paths
+  const processFilePaths = (paths: string[]): string[] => {
+    const staticPaths: string[] = [];
+    if (Array.isArray(paths)) {
+      paths.forEach((absolutePath: string) => {
+        const uploadIndex = absolutePath.indexOf('/uploads/');
+        let staticPath = '';
+        if (uploadIndex !== -1) {
+          const relativePath = absolutePath.substring(uploadIndex + '/uploads/'.length);
+          staticPath = `/static/${relativePath}`;
+        } else {
+          const parts = absolutePath.split('/');
+          const filename = parts[parts.length - 1];
+          staticPath = `/static/${filename}`;
+        }
+        staticPaths.push(staticPath);
+      });
+    }
+    return staticPaths;
+  };
+
+  const fetchSessions = async () => {
+    try {
+      const res = await fetch('http://localhost:8001/api/sessions');
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch sessions", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchSessions();
+  }, [session]); // Refresh list when current session changes (e.g. title updated)
 
   // Poll for status
   useEffect(() => {
@@ -38,42 +78,22 @@ export default function Home() {
         const res = await fetch(`http://localhost:8001/api/session/${session.id}`);
         if (res.ok) {
           const data = await res.json();
-          // Backend returns file_paths_json which contains absolute paths
-          // We must convert them to /static/ relative URLs for the frontend
           if (data.file_paths_json) {
             try {
               const paths = JSON.parse(data.file_paths_json);
+              data.file_paths = processFilePaths(paths);
 
-              const staticPaths: string[] = [];
-              if (Array.isArray(paths)) {
-                paths.forEach((absolutePath: string) => {
-                  const uploadIndex = absolutePath.indexOf('/uploads/');
-                  let staticPath = '';
-                  if (uploadIndex !== -1) {
-                    const relativePath = absolutePath.substring(uploadIndex + '/uploads/'.length);
-                    staticPath = `/static/${relativePath}`;
-                  } else {
-                    const parts = absolutePath.split('/');
-                    const filename = parts[parts.length - 1];
-                    staticPath = `/static/${filename}`;
-                  }
-                  staticPaths.push(staticPath);
-                });
-              }
-              data.file_paths = staticPaths;
-
-              // Defaults
-              if (staticPaths.length > 0) {
-                data.file_path = staticPaths[0]; // Legacy support
+              if (data.file_paths.length > 0) {
+                // Use the first file as default file_path for compatibility
+                data.file_path = data.file_paths[0];
               }
             } catch (e) {
               // ignore parse error
             }
           }
-
           setSession(data);
 
-          // Auto-select first file if not set
+          // If no current file selected, select the first one
           if (!currentFile && data.file_paths && data.file_paths.length > 0) {
             setCurrentFile(data.file_paths[0]);
           }
@@ -108,31 +128,75 @@ export default function Home() {
     formData.append("file", file);
 
     try {
-      const res = await fetch('http://localhost:8001/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      if (!res.ok) throw new Error('Upload failed');
-      const data = await res.json();
+      if (session) {
+        // Upload to existing session
+        const res = await fetch(`http://localhost:8001/api/session/${session.id}/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) throw new Error('Upload failed');
+        // The polling will pick up the new file list shortly
+        alert("文件添加成功");
+      } else {
+        // Create new session
+        const res = await fetch('http://localhost:8001/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) throw new Error('Upload failed');
+        const data = await res.json();
 
-      const staticPath = `/static/${file.name}`;
+        const staticPath = `/static/${file.name}`;
 
-      // Initialize a basic session object locally before first poll
-      setSession({
-        id: data.session_id,
-        file_path: staticPath,
-        file_paths: [staticPath], // Start with this one
-        file_name: file.name,
-        created_at: new Date().toISOString(),
-        // Defaults
-        business_status: 'PENDING', mda_status: 'PENDING', financial_status: 'PENDING',
-        competitor_status: 'PENDING', valuation_status: 'PENDING',
-      } as AnalysisSession);
-      setCurrentFile(staticPath);
+        // Initialize local state
+        const newSession = {
+          id: data.session_id,
+          file_path: staticPath,
+          file_paths: [staticPath],
+          file_name: file.name,
+          created_at: new Date().toISOString(),
+          business_status: 'PENDING', mda_status: 'PENDING', financial_status: 'PENDING',
+          competitor_status: 'PENDING', valuation_status: 'PENDING',
+        } as AnalysisSession;
+
+        setSession(newSession);
+        setCurrentFile(staticPath);
+        fetchSessions(); // Refresh list
+      }
     } catch (err) {
       console.error(err);
       alert("上传失败，请检查后台连接。");
     }
+  };
+
+  const handleNewSession = () => {
+    setSession(null);
+    setCurrentFile(undefined);
+    setCurrentStep('business');
+  };
+
+  const handleSessionSelect = (sess: AnalysisSession) => {
+    // Create a shallow copy with computed file_paths from json to avoid immediate rendering issues before poll
+    let processedPaths: string[] = [];
+    if (sess.file_paths) {
+      // If already processed (from list_sessions? backend usually returns clean obj but file_paths property is property getter in pydantic model, wait.)
+      // The list_sessions returns pydantic objects. The serializer should include computed properties?
+      // FastAPI usually serializes fields. AnalysisSession has file_paths property but Field excluded? 
+      // SQLModel fields are include. The property `file_paths` needs `json.loads`... 
+      // Actually the backend endpoint returns JSON where `file_paths` is computed if I used `response_model` property?
+      // In `list_sessions`, it returns `AnalysisSession` objects. 
+      // Let's assume on selection we set it, and the polling useEffect will fetch full details including paths.
+    }
+
+    setSession(sess);
+    setCurrentStep('business');
+    // File paths will be handled by the effect once session is set
+    setCurrentFile(undefined);
+  };
+
+  const handleBackToList = () => {
+    setSession(null);
+    setCurrentFile(undefined);
   };
 
   const runAnalysis = async () => {
@@ -156,6 +220,18 @@ export default function Home() {
     'valuation': '估值建模'
   };
 
+  if (!session) {
+    return (
+      <main className={styles.container}>
+        <SessionList
+          sessions={sessions}
+          onSelect={handleSessionSelect}
+          onUpload={handleFileUpload}
+        />
+      </main>
+    );
+  }
+
   return (
     <main className={styles.container}>
       <Sidebar
@@ -165,6 +241,9 @@ export default function Home() {
         sessionId={session?.id}
         currentFile={currentFile}
         onFileSelect={setCurrentFile}
+
+        onUploadFile={handleFileUpload}
+        onBack={handleBackToList}
       />
 
       <div className={styles.mainContent}>
@@ -175,10 +254,7 @@ export default function Home() {
               <h2 className={styles.panelTitle}>{stepTitles[currentStep]}</h2>
               <div>
                 {!session ? (
-                  <label className={styles.uploadLabel}>
-                    上传年报 (PDF)
-                    <input type="file" className="hidden" style={{ display: 'none' }} onChange={handleFileUpload} accept=".pdf" />
-                  </label>
+                  <div className="text-gray-500 text-sm">请在左侧上传文档开始分析</div>
                 ) : (
                   <button
                     onClick={runAnalysis}

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, BackgroundTasks, HTTPException
-from src.services.session_service import create_session, get_session, update_session
+from src.services.session_service import create_session, get_session, update_session, list_sessions
+from src.services.title_generator import generate_session_title
 from src.agents.business_analysis.agent import BusinessAnalysisCrew
 from src.agents.financial_analysis.agent import FinancialAnalysisCrew
 from src.agents.valuation.agent import ValuationCrew
@@ -30,8 +31,12 @@ elif os.path.islink("knowledge"):
             print(f"Failed to update knowledge symlink: {e}")
 
 
+@router.get("/sessions")
+async def get_all_sessions():
+    return list_sessions()
+
 @router.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     file_location = f"{UPLOAD_DIR}/{file.filename}"
     with open(file_location, "wb+") as file_object:
         shutil.copyfileobj(file.file, file_object)
@@ -39,7 +44,32 @@ async def upload_file(file: UploadFile = File(...)):
     # 使用绝对路径进行后端处理
     abs_path = os.path.abspath(file_location)
     session = create_session(file_path=abs_path, file_name=file.filename)
-    return {"session_id": session.id, "message": "文件上传成功"}
+    
+    # Trigger Title Generation
+    background_tasks.add_task(generate_session_title, session.id, abs_path)
+    
+    return {"session_id": session.id, "message": "文件上传成功", "file_path": f"/static/{file.filename}"}
+
+@router.post("/session/{session_id}/upload")
+async def add_file_to_session(session_id: str, file: UploadFile = File(...)):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="会话未找到")
+        
+    file_location = f"{UPLOAD_DIR}/{file.filename}"
+    with open(file_location, "wb+") as file_object:
+        shutil.copyfileobj(file.file, file_object)
+        
+    abs_path = os.path.abspath(file_location)
+    
+    # Update file paths
+    current_paths = session.file_paths
+    if abs_path not in current_paths:
+        current_paths.append(abs_path)
+        session.file_paths = current_paths
+        update_session(session)
+        
+    return {"message": "文件添加成功", "file_paths": session.file_paths}
 
 # Helper Tasks
 def _run_business_analysis_task(session_id: str, file_paths: list[str]):

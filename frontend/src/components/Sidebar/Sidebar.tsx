@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { FileText } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
+import { AnalysisSession } from '@/types';
+
 interface SidebarProps {
     files: string[];
     currentStep: string;
@@ -12,6 +14,10 @@ interface SidebarProps {
     sessionId?: string;
     currentFile?: string;
     onFileSelect?: (file: string) => void;
+
+    // New props
+    onUploadFile?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onBack?: () => void;
 }
 
 // ... steps array ...
@@ -23,44 +29,29 @@ const steps = [
     { id: 'valuation', label: '5. 估值建模' },
 ];
 
-export default function Sidebar({ files, currentStep, onStepChange, sessionId, currentFile, onFileSelect }: SidebarProps) {
-    const handleExport = async () => {
-        if (!sessionId) {
-            alert("没有可导出的会话");
-            return;
-        }
-        window.open(`http://localhost:8001/api/export/${sessionId}`, '_blank');
-    };
+export default function Sidebar({
+    files,
+    currentStep,
+    onStepChange,
+    sessionId,
+    currentFile,
+    onFileSelect,
+    onUploadFile,
+    onBack
+}: SidebarProps) {
 
-    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files?.[0]) return;
-        const file = e.target.files[0];
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-            const res = await fetch('http://localhost:8001/api/import', {
-                method: 'POST',
-                body: formData
-            });
-            if (res.ok) {
-                const data = await res.json();
-                alert("导入成功！页面即将刷新...");
-                window.location.reload();
-            } else {
-                alert("导入失败");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("导入出错");
-        }
-    };
-
+    // Removed handleExport and handleImport as per user request
 
     return (
         <div className={styles.sidebar}>
             {/* ... header ... */}
             <div className={styles.header}>
+                <div
+                    onClick={onBack}
+                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.85rem' }}
+                >
+                    ← 返回列表
+                </div>
                 <h1 className={styles.title}>价值分析师</h1>
                 <p className={styles.subtitle}>巴菲特风格</p>
             </div>
@@ -68,7 +59,20 @@ export default function Sidebar({ files, currentStep, onStepChange, sessionId, c
             <div className={styles.content}>
                 {/* Uploaded Files Section */}
                 <div className={styles.section}>
-                    <h2 className={styles.sectionTitle}>上传资料</h2>
+                    <div className="flex justify-between items-center mb-2">
+                        <h2 className={styles.sectionTitle} style={{ marginBottom: 0 }}>研究资料</h2>
+                        <label className="cursor-pointer text-blue-500 hover:text-blue-700 text-xs">
+                            + 添加
+                            <input
+                                type="file"
+                                className="hidden"
+                                style={{ display: 'none' }}
+                                onChange={onUploadFile}
+                                accept=".pdf"
+                            />
+                        </label>
+                    </div>
+
                     <ul className={styles.list}>
                         {files.map((file, idx) => {
                             const isSelected = currentFile === file;
@@ -92,8 +96,6 @@ export default function Sidebar({ files, currentStep, onStepChange, sessionId, c
                         )}
                     </ul>
                 </div>
-                {/* ... remaining content ... */}
-
 
                 {/* Analysis Steps Section */}
                 <div className={styles.section}>
@@ -115,18 +117,6 @@ export default function Sidebar({ files, currentStep, onStepChange, sessionId, c
             </div>
 
             <div className={styles.footer}>
-                <div className={styles.actions} style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
-                    {sessionId && (
-                        <button onClick={handleExport} style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', cursor: 'pointer' }}>
-                            导出状态
-                        </button>
-                    )}
-                    <label style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', cursor: 'pointer', background: '#efefef', borderRadius: '2px' }}>
-                        导入状态
-                        <input type="file" style={{ display: 'none' }} accept=".zip" onChange={handleImport} />
-                    </label>
-                </div>
-
                 <div className={styles.userProfile}>
                     <div className={styles.avatar}>U</div>
                     <div className={styles.userInfo}>
@@ -138,3 +128,4 @@ export default function Sidebar({ files, currentStep, onStepChange, sessionId, c
         </div>
     );
 }
+

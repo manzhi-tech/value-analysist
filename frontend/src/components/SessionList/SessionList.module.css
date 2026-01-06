@@ -1,0 +1,161 @@
+.container {
+    padding: 3rem;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f3f4f6;
+    /* Light gray background for contrast */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+}
+
+.subtitle {
+    color: #6b7280;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    /* Slightly wider cards */
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    /* Reviewer preference: rounded corners */
+    padding: 0;
+    /* Let children handle padding */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 240px;
+    /* Fixed height for uniformity */
+    position: relative;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: #bfdbfe;
+    /* blue-200 */
+}
+
+.newCard {
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+    border: 2px dashed #cbd5e1;
+    align-items: center;
+    justify-content: center;
+    color: #3b82f6;
+    gap: 1rem;
+}
+
+.newCard:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.cardContent {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.cardHeader {
+    margin-bottom: 0.5rem;
+}
+
+.cardIcon {
+    width: 48px;
+    height: 48px;
+    background: #eff6ff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    color: #2563eb;
+}
+
+.cardTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.4;
+    margin: 0;
+
+    /* Clamp text to 3 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    /* Standard property for compatibility */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cardDate {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+.cardFooter {
+    padding: 1rem 1.5rem;
+    background-color: #f9fafb;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.statusCompleted {
+    background-color: #ecfdf5;
+    color: #059669;
+}
+
+.statusRunning {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.statusPending {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.statusFailed {
+    background-color: #fef2f2;
+    color: #dc2626;
+}

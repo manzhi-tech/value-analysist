@@ -31,7 +31,12 @@ def update_session(analysis_session: AnalysisSession):
     with Session(engine) as session:
         session.merge(analysis_session)
         session.commit()
-        # session.refresh(analysis_session) # refresh might fail if merge returns a new instance bound to session, but we just need commit here usually.
-        # Actually merge returns the bound instance.
-        # simple update doesn't need return usually unless we need ID.
+
+def list_sessions(limit: int = 20) -> list[AnalysisSession]:
+    with Session(engine) as session:
+        statement = select(AnalysisSession).order_by(AnalysisSession.created_at.desc()).limit(limit)
+        results = session.exec(statement)
+        return list(results.all())
+
+
 

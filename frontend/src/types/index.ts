@@ -4,6 +4,7 @@ export interface AnalysisSession {
     file_path: string;
     file_name: string;
     file_paths?: string[];
+    company_name?: string;
 
     // Results
     business_analysis_result?: string;
