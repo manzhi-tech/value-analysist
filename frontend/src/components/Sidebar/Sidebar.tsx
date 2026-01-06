@@ -23,11 +23,11 @@ interface SidebarProps {
 
 // ... steps array ...
 const steps = [
-    { id: 'business', label: '1. 商业模式分析' },
-    { id: 'mda', label: '2. MD&A 风险分析' },
-    { id: 'financial', label: '3. 财务报表分析' },
-    { id: 'competitor', label: '4. 竞争对手分析' },
-    { id: 'valuation', label: '5. 估值建模' },
+    { id: 'business', label: '商业模式分析', disabled: false },
+    { id: 'mda', label: 'MD&A 风险分析', disabled: false },
+    { id: 'financial', label: '财务报表分析', disabled: true },
+    { id: 'competitor', label: '竞争对手分析', disabled: true },
+    { id: 'valuation', label: '估值建模', disabled: true },
 ];
 
 export default function Sidebar({
@@ -55,7 +55,6 @@ export default function Sidebar({
                     ← 返回列表
                 </div>
                 <h1 className={styles.title}>价值分析师</h1>
-                <p className={styles.subtitle}>巴菲特风格</p>
             </div>
 
             <div className={styles.content}>
@@ -120,8 +119,17 @@ export default function Sidebar({
                     <ul className={styles.list}>
                         {steps.map((step) => {
                             const isActive = currentStep === step.id;
+                            const isDisabled = step.disabled;
                             return (
-                                <li key={step.id} onClick={() => onStepChange(step.id)} style={{ cursor: 'pointer' }}>
+                                <li
+                                    key={step.id}
+                                    onClick={() => !isDisabled && onStepChange(step.id)}
+                                    style={{
+                                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                        opacity: isDisabled ? 0.5 : 1,
+                                        pointerEvents: isDisabled ? 'none' : 'auto' // Optional: strictly prevent hoisting/interaction
+                                    }}
+                                >
                                     <div className={`${styles.stepItem} ${isActive ? styles.stepActive : ''}`}>
                                         <div className={`${styles.indicator} ${isActive ? styles.indicatorActive : ''}`} />
                                         <span className={styles.stepLabel}>{step.label}</span>

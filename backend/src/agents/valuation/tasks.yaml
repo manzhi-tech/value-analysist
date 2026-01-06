@@ -8,6 +8,7 @@ calculate_intrinsic_value:
        - 如果护城河“窄”或“无”，使用低增长（例如 2-5%）。
     3. 确定折现率。默认使用 10% (0.10)，除非风险极高。
     4. 务必使用 `DCFCalculatorTool` 工具进行精确计算。
+    5. 在计算之外，请对估值结果的敏感性进行定性描述，并分析可能导致估值偏差的关键假设风险。作为分析师，给出你对该估值结果可信度的判断。
     
     提供的输入：
     - 财务数据: {financial_data}
@@ -21,5 +22,6 @@ calculate_intrinsic_value:
     - 详细的 DCF 计算过程 (来自工具输出)。
     - 内在价值与当前市值的对比（如果已知）或仅展示估值结果。
     - 最终结论: "被低估 (Undervalued)", "估值合理 (Fairly Valued)", 或 "被高估 (Overvalued)"。
+    - 估值假设风险分析及可信度判断。
     报告必须是中文。
   agent: valuation_expert
